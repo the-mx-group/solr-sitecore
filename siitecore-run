@@ -1,0 +1,48 @@
+#!/bin/bash
+DIR=/opt/solr/server/solr/
+
+#configure Sitecore schema template
+if [ -d $DIR/configsets/sitecore ]; then
+    rm -rf $DIR/configsets/sitecore
+fi;
+cp -rav $DIR/configsets/_default $DIR/configsets/sitecore
+
+sed -i "s/<uniqueKey>id<\/uniqueKey>/<uniqueKey>_uniqueid<\/uniqueKey>/" $DIR/configsets/sitecore/conf/managed-schema
+sed -i "s/<\/schema>/<field name='_uniqueid' type='string' indexed='true' required='true' stored='true'\/>\n<\/schema>/" $DIR/configsets/sitecore/conf/managed-schema
+
+# create requisite cores
+cores=(
+	sitecore_analytics_index
+    sitecore_core_index
+    sitecore_fxm_master_index
+	sitecore_fxm_web_index
+	sitecore_list_index
+    sitecore_marketing_asset_index_master
+    sitecore_marketing_asset_index_web
+	sitecore_marketingdefinitions_master
+	sitecore_marketingdefinitions_web
+    sitecore_master_index
+	sitecore_suggested_test_index
+	sitecore_testing_index
+	sitecore_web_index
+    social_messages_master
+	social_messages_web
+    $CUSTOM_CORES
+);
+
+for core in "${cores[@]}"; do
+    echo Processing core $core
+    if [ ! -d $DIR/mycores/$core ]; then
+        mkdir -p $DIR/mycores/$core/data
+        mkdir -p $DIR/mycores/$core/conf
+        echo name=$core > $DIR/mycores/$core/core.properties
+        echo update.autoCreateFields=false  >> $DIR/mycores/$core/core.properties
+        echo dataDir=data >> $DIR/mycores/$core/core.properties
+        cp -r $DIR/configsets/sitecore/conf/* $DIR/mycores/$core/conf/
+    fi;
+done
+
+#ensure there is a secure certificate
+
+#launch solr
+exec "/opt/docker-solr/scripts/solr-foreground"
