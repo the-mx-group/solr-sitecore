@@ -31,6 +31,9 @@ Solr runs on container port 8983.  You may wish to map this into another network
 All cores are created at container path /opt/solr/server/solr/mycores.  You may wish to mount this as a volume
 to durable storage outside the container.  If you don't do this, your data will be destroyed when you shut down the container.
 
+## SSL
+
+This container requires SSL (https) by default.  To disable, set the environment variable "NO_SSL" to any value other than an empty string.
 
 ## Usage
 

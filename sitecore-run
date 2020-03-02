@@ -42,7 +42,22 @@ for core in "${cores[@]}"; do
     fi;
 done
 
-#ensure there is a secure certificate
+#ensure there is a secure certificate if needed
+if [ "$NO_SSL" == "" ]; then
+    echo Enabling SSL
+    export SOLR_SSL_KEY_STORE=$DIR/solr-keystore.jks
+    export SOLR_SSL_KEY_STORE_PASSWORD=solr-ssl
+    export SOLR_SSL_TRUST_STORE=$SOLR_SSL_KEY_STORE
+    export SOLR_SSL_TRUST_STORE_PASSWORD=solr-ssl
+    export SOLR_SSL_NEED_CLIENT_AUTH=false
+    export SOLR_SSL_WANT_CLIENT_AUTH=false
+    export SOLR_SSL_KEY_STORE_TYPE=JKS
+    export SOLR_SSL_TRUST_STORE_TYPE=JKS
+    if [ ! -f $SOLR_SSL_KEY_STORE ]; then
+        echo Generating SSL key pair
+        keytool -genkeypair -alias solr-ssl -keyalg RSA -keysize 2048 -keypass $SOLR_SSL_TRUST_STORE_PASSWORD -storepass $SOLR_SSL_KEY_STORE_PASSWORD -validity 9999 -keystore $SOLR_SSL_KEY_STORE -dname "CN=solr"
+    fi;
+fi;
 
 #launch solr
 exec "/opt/docker-solr/scripts/solr-foreground"
